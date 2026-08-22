@@ -4,22 +4,23 @@
 [![PHP](https://img.shields.io/badge/PHP-8.2-777BB4.svg)](https://www.php.net/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
 [![MySQL](https://img.shields.io/badge/MySQL-8-4479A1.svg)](https://www.mysql.com/)
-[![Traefik](https://img.shields.io/badge/Traefik-HTTPS-24A1C1.svg)](https://doc.traefik.io/traefik/)
+[![Traefik](https://img.shields.io/badge/Traefik-HTTPS-24A1C1.svg)](https://github.com/MrBrims/wptraefik)
 [![Version](https://img.shields.io/badge/Version-1.0.0-green.svg)](#changelog)
 
 Local WordPress stack: PHP-FPM, Nginx, MySQL, phpMyAdmin. HTTPS is terminated by an external Traefik instance. The first start installs a stock WordPress (core, default Twenty* themes, default plugins). Themes are not cloned from remote repositories.
 
+## Works with wptraefik
+
+HTTPS and routing are handled by **[MrBrims/wptraefik](https://github.com/MrBrims/wptraefik)** — a local Traefik reverse proxy with mkcert TLS.
+
+This stack joins the external Docker network `traefik_web` and does not publish ports 80/443 on the host. Traefik labels are already defined in `docker-compose.yml`.
+
 ## Requirements
 
 - Docker and Docker Compose
-- External Traefik network `traefik_web` (Traefik already running)
+- [mkcert](https://github.com/FiloSottile/mkcert) — run **`mkcert -install`** after install
+- [wptraefik](https://github.com/MrBrims/wptraefik) running (`make up`) with TLS registered for your slug (`make add-site`)
 - GNU Make (for `Makefile` targets)
-
-Create the network if it does not exist yet:
-
-```bash
-docker network create traefik_web
-```
 
 ## Get the project from Git
 
@@ -48,12 +49,21 @@ git pull
 
 ## Quick start
 
-From the project root (after clone and `.env`):
+Full stack from two repositories:
 
 ```bash
+# 1. Traefik (separate clone)
+git clone https://github.com/MrBrims/wptraefik.git
+cd wptraefik
+make up
+make add-site SLUG=wp DOMAIN=wp.localhost
+
+# 2. WordPress (this repo)
+git clone https://github.com/MrBrims/wpdocker.git
+cd wpdocker
+cp .env.example .env
 make start
 ```
-
 
 `make start` builds the PHP image and starts the containers. If `wp-config.php` is missing, the entrypoint downloads WordPress core, creates the config, waits for the database, and runs `wp core install`.
 
@@ -61,6 +71,24 @@ Site: [https://wp.localhost](https://wp.localhost)
 phpMyAdmin: [https://pma.wp.localhost](https://pma.wp.localhost)
 
 Use `.localhost` hostnames because Chrome blocks HTTPS on `.local`. Admin and database credentials live in `.env`.
+
+## Traefik setup
+
+Match wptraefik `make add-site` arguments to your `.env` hostnames:
+
+| wpdocker `.env` | wptraefik |
+| --- | --- |
+| `PROJECT_NAME=wp` | `SLUG=wp` in `make add-site` |
+| `SITE_HOSTNAME=wp.localhost` | `DOMAIN=wp.localhost` |
+| `PMA_HOSTNAME=pma.wp.localhost` | covered by `*.wp.localhost` wildcard |
+
+If you change `PROJECT_NAME` or hostnames in `.env`, update wptraefik too:
+
+```bash
+make add-site SLUG=<new-slug> DOMAIN=<new-domain>.localhost
+```
+
+See [wptraefik README](https://github.com/MrBrims/wptraefik#full-stack-quick-start-with-wpdocker) for the full proxy setup.
 
 ## Themes and plugins
 
