@@ -1,5 +1,11 @@
 # Local WordPress (Docker)
 
+[![WordPress](https://img.shields.io/badge/WordPress-latest-21759B.svg)](https://wordpress.org/)
+[![PHP](https://img.shields.io/badge/PHP-8.2-777BB4.svg)](https://www.php.net/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
+[![MySQL](https://img.shields.io/badge/MySQL-8-4479A1.svg)](https://www.mysql.com/)
+[![Traefik](https://img.shields.io/badge/Traefik-HTTPS-24A1C1.svg)](https://doc.traefik.io/traefik/)
+
 Local WordPress stack: PHP-FPM, Nginx, MySQL, phpMyAdmin. HTTPS is terminated by an external Traefik instance. The first start installs a stock WordPress (core, default Twenty* themes, default plugins). Themes are not cloned from remote repositories.
 
 ## Requirements
@@ -14,12 +20,39 @@ Create the network if it does not exist yet:
 docker network create traefik_web
 ```
 
-## Quick start
+## Get the project from Git
+
+Clone the repository (WordPress core is not in Git; it is downloaded into a Docker volume on first start):
+
+```bash
+git clone https://github.com/MrBrims/wpdocker.git
+cd wpdocker
+```
+
+`.env` is gitignored. After clone, always copy the example file:
 
 ```bash
 cp .env.example .env
+```
+
+Empty `themes/`, `plugins/`, `mu-plugins/`, and `logs/` are kept in the repo via `.gitkeep`. Put your own themes and plugins into those folders; they are not fetched from Git remotes by this stack.
+
+To update an existing checkout:
+
+```bash
+git pull
+```
+
+`git pull` does not replace the database or WordPress core in Docker volumes. After pulling changes to `php/Dockerfile` or `php/entrypoint.sh`, run `make restart-build`.
+
+## Quick start
+
+From the project root (after clone and `.env`):
+
+```bash
 make start
 ```
+
 
 `make start` builds the PHP image and starts the containers. If `wp-config.php` is missing, the entrypoint downloads WordPress core, creates the config, waits for the database, and runs `wp core install`.
 
