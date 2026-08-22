@@ -1,0 +1,32 @@
+server {
+    listen 80;
+    server_name ${SITE_HOSTNAME};
+    root /var/www/html;
+    client_max_body_size 1024M;
+
+    index index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        # wordpress — php-fpm service name in docker-compose.yml
+        # 9000 — standard php-fpm port
+        fastcgi_pass wordpress:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        # Traefik terminates TLS on websecure; without this PHP sees plain HTTP
+        fastcgi_param HTTPS on;
+        fastcgi_param HTTP_X_FORWARDED_PROTO https;
+    }
+
+    location ~* \.(css|js|gif|ico|jpeg|jpg|png)$ {
+        expires max;
+        log_not_found off;
+    }
+}
