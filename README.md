@@ -5,6 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
 [![MySQL](https://img.shields.io/badge/MySQL-8-4479A1.svg)](https://www.mysql.com/)
 [![Traefik](https://img.shields.io/badge/Traefik-HTTPS-24A1C1.svg)](https://doc.traefik.io/traefik/)
+[![Version](https://img.shields.io/badge/Version-1.0.0-green.svg)](#changelog)
 
 Local WordPress stack: PHP-FPM, Nginx, MySQL, phpMyAdmin. HTTPS is terminated by an external Traefik instance. The first start installs a stock WordPress (core, default Twenty* themes, default plugins). Themes are not cloned from remote repositories.
 
@@ -35,7 +36,7 @@ cd wpdocker
 cp .env.example .env
 ```
 
-Empty `themes/`, `plugins/`, `mu-plugins/`, and `logs/` are kept in the repo via `.gitkeep`. Put your own themes and plugins into those folders; they are not fetched from Git remotes by this stack.
+Empty `themes/` and `plugins/` are kept in the repo via `index.php` (`// Silence is golden.`). Empty `mu-plugins/` and `logs/` use `.gitkeep`. Put your own themes and plugins into those folders; they are not fetched from Git remotes by this stack.
 
 To update an existing checkout:
 
@@ -115,3 +116,45 @@ Copy `.env.example` to `.env` and adjust as needed:
 - **phpmyadmin**
 
 Clean reinstall: `make kill`, then `make start`.
+
+## Project Structure
+
+```
+wpdocker/
+├── php/
+│   ├── Dockerfile            # PHP 8.2-FPM, WP-CLI, Xdebug, gosu
+│   ├── entrypoint.sh         # First-run WP install, languages, WP_DEBUG
+│   └── php.ini               # PHP limits and Xdebug (host.docker.internal)
+├── nginx/
+│   └── default.conf.template # WordPress vhost; HTTPS forwarded from Traefik
+├── themes/                   # Bind-mounted to wp-content/themes
+│   └── index.php             # Silence is golden (keeps empty dir in Git)
+├── plugins/                  # Bind-mounted to wp-content/plugins
+│   └── index.php
+├── mu-plugins/               # Placeholder (.gitkeep); mount is commented out
+├── logs/                     # Bind-mounted to wp-content/debug-logs
+│   └── .gitkeep
+├── docker-compose.yml        # wordpress, nginx, db, phpmyadmin + Traefik
+├── Makefile                  # docker compose wrappers (make help)
+├── .env.example
+├── .env                      # credentials and hostnames (gitignored)
+├── .gitignore
+└── README.md
+```
+
+WordPress core and the MySQL data directory live in named Docker volumes (`wordpress_core`, `db_data`), not in this tree.
+
+## Changelog
+
+### 1.0.0
+
+- **NEW**: Docker Compose stack — PHP-FPM, Nginx, MySQL 8, phpMyAdmin
+- **NEW**: HTTPS via an external Traefik network (`traefik_web`) and `.localhost` hosts
+- **NEW**: First start installs stock WordPress with WP-CLI (core download, `wp-config.php`, `wp core install`)
+- **NEW**: Language packs on start: `ru_RU`, `de_DE`, `fr_FR`, `es_ES`, `it_IT`
+- **NEW**: Bind-mounts for `themes/`, `plugins/`, and `logs/` (debug.log on the host)
+- **NEW**: Makefile targets for start, rebuild, logs, WP-CLI debug, and a clean volume wipe
+- **NEW**: `WP_DEBUG` / `WP_DEBUG_LOG` / `WP_DEBUG_DISPLAY` applied from `.env` on every container start
+- **TECHNICAL**: MySQL 8 instead of MariaDB; skip verification of the local self-signed DB cert
+- **TECHNICAL**: Xdebug 3 against `host.docker.internal`; WP-CLI and gosu in the PHP image
+- **TECHNICAL**: Entrypoint line endings normalized so the script runs on Linux containers from Windows checkouts
