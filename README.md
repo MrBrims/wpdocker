@@ -1,5 +1,11 @@
 # Local WordPress (Docker)
 
+[![WordPress](https://img.shields.io/badge/WordPress-latest-21759B.svg)](https://wordpress.org/)
+[![PHP](https://img.shields.io/badge/PHP-8.2-777BB4.svg)](https://www.php.net/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
+[![MySQL](https://img.shields.io/badge/MySQL-8-4479A1.svg)](https://www.mysql.com/)
+[![Traefik](https://img.shields.io/badge/Traefik-HTTPS-24A1C1.svg)](https://doc.traefik.io/traefik/)
+
 Local WordPress stack: PHP-FPM, Nginx, MySQL, phpMyAdmin. HTTPS is terminated by an external Traefik instance. The first start installs a stock WordPress (core, default Twenty* themes, default plugins). Themes are not cloned from remote repositories.
 
 ## Requirements
