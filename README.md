@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
 [![MySQL](https://img.shields.io/badge/MySQL-8-4479A1.svg)](https://www.mysql.com/)
 [![Traefik](https://img.shields.io/badge/Traefik-HTTPS-24A1C1.svg)](https://github.com/MrBrims/wptraefik)
-[![Version](https://img.shields.io/badge/Version-1.0.0-green.svg)](#changelog)
+[![Version](https://img.shields.io/badge/Version-1.0.1-green.svg)](#changelog)
 
 Local WordPress stack: PHP-FPM, Nginx, MySQL, phpMyAdmin. HTTPS is terminated by an external Traefik instance. The first start installs a stock WordPress (core, default Twenty* themes, default plugins). Themes are not cloned from remote repositories.
 
@@ -31,11 +31,13 @@ git clone https://github.com/MrBrims/wpdocker.git
 cd wpdocker
 ```
 
-`.env` is gitignored. After clone, always copy the example file:
+`.env` is gitignored. After clone, configure the project slug (updates `.env.example` and copies it to `.env`):
 
 ```bash
-cp .env.example .env
+make PROJECT=wp
 ```
+
+For a different slug, pass your name instead of `wp` (e.g. `make PROJECT=myshop` sets `myshop.localhost` and `pma.myshop.localhost`).
 
 Empty `themes/` and `plugins/` are kept in the repo via `index.php` (`// Silence is golden.`). Empty `mu-plugins/` and `logs/` use `.gitkeep`. Put your own themes and plugins into those folders; they are not fetched from Git remotes by this stack.
 
@@ -61,7 +63,7 @@ make add-site SLUG=wp DOMAIN=wp.localhost
 # 2. WordPress (this repo)
 git clone https://github.com/MrBrims/wpdocker.git
 cd wpdocker
-cp .env.example .env
+make PROJECT=wp
 make start
 ```
 
@@ -106,6 +108,7 @@ WordPress core is stored in the `wordpress_core` Docker volume, not in the repo.
 
 ```bash
 make help            # list targets
+make PROJECT=<slug>  # configure .env.example and copy to .env
 make start           # build and start (first run, and after Dockerfile/entrypoint changes)
 make up              # start without rebuilding the image
 make upb             # same as start
@@ -123,7 +126,7 @@ After editing `php/entrypoint.sh` or `php/Dockerfile`, run `make start` or `make
 
 ## Configuration
 
-Copy `.env.example` to `.env` and adjust as needed:
+Configure hostnames with `make PROJECT=<slug>` or copy `.env.example` to `.env` manually and adjust as needed:
 
 | Variable | Purpose |
 | --- | --- |
@@ -173,6 +176,10 @@ wpdocker/
 WordPress core and the MySQL data directory live in named Docker volumes (`wordpress_core`, `db_data`), not in this tree.
 
 ## Changelog
+
+### 1.0.1
+
+- **NEW**: `make PROJECT=<slug>` — set `PROJECT_NAME`, `SITE_HOSTNAME`, `PMA_HOSTNAME` in `.env.example`, update the site hint comment, and copy to `.env`
 
 ### 1.0.0
 

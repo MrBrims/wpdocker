@@ -55,6 +55,25 @@ logs:
 start:
 	docker-compose $(COMPOSE_FILE) up -d --build
 
+# Configure .env.example and copy to .env (run: make PROJECT=<slug>)
+.PHONY: project-env
+project-env:
+	@test -n "$(PROJECT)" || (echo "Error: PROJECT is empty. Usage: make PROJECT=<slug>" >&2; exit 1)
+	@case "$(PROJECT)" in \
+		*[!a-zA-Z0-9_-]*|""|[-_]*) \
+			echo "Error: PROJECT must start with a letter or digit and contain only [a-zA-Z0-9_-]. Got: $(PROJECT)" >&2; \
+			exit 1;; \
+	esac
+	@sed -i 's/^PROJECT_NAME=.*/PROJECT_NAME=$(PROJECT)/' .env.example
+	@sed -i 's/^SITE_HOSTNAME=.*/SITE_HOSTNAME=$(PROJECT).localhost/' .env.example
+	@sed -i 's/^PMA_HOSTNAME=.*/PMA_HOSTNAME=pma.$(PROJECT).localhost/' .env.example
+	@sed -i 's@^# Site:.*@# Site: https://$(PROJECT).localhost/wp-admin | phpMyAdmin: https://pma.$(PROJECT).localhost@' .env.example
+	@cp .env.example .env
+	@echo "Configured for project: $(PROJECT)"
+	@echo "  Site:       https://$(PROJECT).localhost/wp-admin"
+	@echo "  phpMyAdmin: https://pma.$(PROJECT).localhost"
+	@echo "In wptraefik run: make add-site SLUG=$(PROJECT) DOMAIN=$(PROJECT).localhost"
+
 # ==============================================================================
 # Help
 # ==============================================================================
@@ -77,7 +96,13 @@ help:
 	@echo "  logs           - Show WordPress container logs (entrypoint, [WP_DEBUG] messages)."
 	@echo "  start          - Build and start all services (standard WordPress install on first run)."
 	@echo ""
+	@echo "  make PROJECT=<slug> - Configure .env.example and copy to .env."
+	@echo ""
 	@echo "  help           - Show this help message."
 
-# Default goal is help
+# Default goal is help; when PROJECT is set, configure env instead
+ifneq ($(strip $(PROJECT)),)
+.DEFAULT_GOAL := project-env
+else
 .DEFAULT_GOAL := help
+endif
