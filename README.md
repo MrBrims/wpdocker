@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
 [![MySQL](https://img.shields.io/badge/MySQL-8-4479A1.svg)](https://www.mysql.com/)
 [![Traefik](https://img.shields.io/badge/Traefik-HTTPS-24A1C1.svg)](https://github.com/MrBrims/wptraefik)
-[![Version](https://img.shields.io/badge/Version-1.0.3-green.svg)](#changelog)
+[![Version](https://img.shields.io/badge/Version-1.0.4-green.svg)](#changelog)
 
 Local WordPress stack: PHP-FPM, Nginx, MySQL, phpMyAdmin. HTTPS is terminated by an external Traefik instance. The first start installs a stock WordPress (core, default Twenty* themes, default plugins). Themes are not cloned from remote repositories.
 
@@ -193,6 +193,11 @@ wpdocker/
 WordPress core and the MySQL data directory live in named Docker volumes (`wordpress_core`, `db_data`), not in this tree.
 
 ## Changelog
+
+### 1.0.4
+
+- **FIX**: Admin plugin, theme, and core install/update without FTP credentials prompt
+- **TECHNICAL**: PHP-FPM runs as `UID`/`GID` from `.env`; `FS_METHOD` direct applied in `wp-config.php` on every container start
 
 ### 1.0.3
 

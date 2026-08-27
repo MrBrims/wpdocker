@@ -24,7 +24,12 @@ if [ -d "/var/www/html/wp-content" ]; then
     mkdir -p /var/www/html/wp-content/ai1wm-backups
     chmod -R 777 /var/www/html/wp-content/ai1wm-backups
 fi
-# Ensure debug-logs mount is writable by php-fpm (www-data) so WP_DEBUG_LOG can write
+for dir in plugins themes mu-plugins; do
+    if [ -d "/var/www/html/wp-content/${dir}" ]; then
+        chmod 777 "/var/www/html/wp-content/${dir}"
+    fi
+done
+# Ensure debug-logs mount is writable by php-fpm so WP_DEBUG_LOG can write
 if [ -d "/var/www/html/wp-content/debug-logs" ]; then
     chmod 777 /var/www/html/wp-content/debug-logs
 fi
@@ -52,6 +57,7 @@ if [ ! -f "/var/www/html/wp-config.php" ]; then
 if ( ! defined( 'MYSQL_CLIENT_FLAGS' ) ) {
 	define( 'MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT );
 }
+define( 'FS_METHOD', 'direct' );
 PHP
 
     echo "Waiting for database..."
@@ -115,10 +121,11 @@ if [ -f "/var/www/html/wp-config.php" ]; then
         echo "[WP_DEBUG] WARN: could not find require_once wp-settings in wp-config.php, skipping debug constants"
     else
         echo "[WP_DEBUG] Inserting constants before line ${INSERT_LINE}"
-        # Remove existing debug constants
+        # Remove existing debug and filesystem constants
         sed -i "/define *([[:space:]]*'WP_DEBUG' *,/d" "${WPCONFIG}"
         sed -i "/define *([[:space:]]*'WP_DEBUG_LOG' *,/d" "${WPCONFIG}"
         sed -i "/define *([[:space:]]*'WP_DEBUG_DISPLAY' *,/d" "${WPCONFIG}"
+        sed -i "/define *([[:space:]]*'FS_METHOD' *,/d" "${WPCONFIG}"
         # Line number after removals
         INSERT_LINE=$(grep -n "require_once" "${WPCONFIG}" | grep "wp-settings" | head -1 | cut -d: -f1)
         DEBUG_VAL="false"; [ "${WP_DEBUG}" = "true" ] && DEBUG_VAL="true"
@@ -127,7 +134,7 @@ if [ -f "/var/www/html/wp-config.php" ]; then
             WP_DEBUG_LOG_PATH="/var/www/html/wp-content/debug-logs/debug.log"
             LOG_LINE="define( 'WP_DEBUG_LOG', '${WP_DEBUG_LOG_PATH}' );"
             touch "${WP_DEBUG_LOG_PATH}"
-            chown 33:33 "${WP_DEBUG_LOG_PATH}" 2>/dev/null || true
+            chown "${UID}:${GID}" "${WP_DEBUG_LOG_PATH}" 2>/dev/null || true
             chmod 666 "${WP_DEBUG_LOG_PATH}"
         else
             LOG_LINE="define( 'WP_DEBUG_LOG', false );"
@@ -138,6 +145,7 @@ if [ -f "/var/www/html/wp-config.php" ]; then
         echo "define( 'WP_DEBUG', ${DEBUG_VAL} );" >> "${WPCONFIG}.debug.tmp"
         echo "${LOG_LINE}" >> "${WPCONFIG}.debug.tmp"
         echo "define( 'WP_DEBUG_DISPLAY', ${DISPLAY_VAL} );" >> "${WPCONFIG}.debug.tmp"
+        echo "define( 'FS_METHOD', 'direct' );" >> "${WPCONFIG}.debug.tmp"
         tail -n +${INSERT_LINE} "${WPCONFIG}" >> "${WPCONFIG}.debug.tmp"
         mv "${WPCONFIG}.debug.tmp" "${WPCONFIG}"
         echo "[WP_DEBUG] Done. Constants in file: $(grep -c "WP_DEBUG" "${WPCONFIG}" || echo 0)"
@@ -145,6 +153,8 @@ if [ -f "/var/www/html/wp-config.php" ]; then
 fi
 
 # After install (or if already installed), start php-fpm as root.
-# php-fpm workers run as the user from its config (usually www-data).
+# php-fpm workers run as UID:GID (same owner as WordPress files and WP-CLI).
+sed -i 's/^user = www-data/user = user/' /usr/local/etc/php-fpm.d/www.conf
+sed -i 's/^group = www-data/group = user/' /usr/local/etc/php-fpm.d/www.conf
 echo "Starting php-fpm as root..."
 exec "$@"
