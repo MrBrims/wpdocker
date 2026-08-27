@@ -122,6 +122,9 @@ make shell           # bash inside the wordpress container
 make logs            # WordPress logs (entrypoint, WP_DEBUG)
 make wp-ls           # list /var/www/html
 make wp-config-debug # WP_DEBUG / WP_DEBUG_LOG / WP_DEBUG_DISPLAY values
+make delete-theme    # remove themes (confirm each; keep index.php)
+make delete-plugins  # remove plugins (confirm each; keep index.php)
+make delete-all      # remove all themes and plugins (keep index.php)
 ```
 
 After editing `php/entrypoint.sh` or `php/Dockerfile`, run `make start` or `make restart-build`.
@@ -193,6 +196,11 @@ wpdocker/
 WordPress core and the MySQL data directory live in named Docker volumes (`wordpress_core`, `db_data`), not in this tree.
 
 ## Changelog
+
+### 1.0.5
+
+- **NEW**: `make delete-theme`, `delete-plugins`, `delete-all` — clean `themes/` and `plugins/` (keep `index.php`); per-item confirm for theme/plugins, bulk delete for `delete-all`
+- **FIX**: `delete-theme` and `delete-plugins` accept only `y` or `n`; any other input is rejected with a re-prompt
 
 ### 1.0.4
 
