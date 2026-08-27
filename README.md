@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
 [![MySQL](https://img.shields.io/badge/MySQL-8-4479A1.svg)](https://www.mysql.com/)
 [![Traefik](https://img.shields.io/badge/Traefik-HTTPS-24A1C1.svg)](https://github.com/MrBrims/wptraefik)
-[![Version](https://img.shields.io/badge/Version-1.0.1-green.svg)](#changelog)
+[![Version](https://img.shields.io/badge/Version-1.0.3-green.svg)](#changelog)
 
 Local WordPress stack: PHP-FPM, Nginx, MySQL, phpMyAdmin. HTTPS is terminated by an external Traefik instance. The first start installs a stock WordPress (core, default Twenty* themes, default plugins). Themes are not cloned from remote repositories.
 
@@ -39,7 +39,7 @@ make PROJECT=wp
 
 For a different slug, pass your name instead of `wp` (e.g. `make PROJECT=myshop` sets `myshop.localhost` and `pma.myshop.localhost`).
 
-Empty `themes/` and `plugins/` are kept in the repo via `index.php` (`// Silence is golden.`). Empty `mu-plugins/` and `logs/` use `.gitkeep`. Put your own themes and plugins into those folders; they are not fetched from Git remotes by this stack.
+Empty `themes/`, `plugins/`, and `mu-plugins/` are kept in the repo via `index.php` (`// Silence is golden.`). Empty `logs/` uses `.gitkeep`. Put your own themes, plugins, and must-use plugins into those folders; they are not fetched from Git remotes by this stack.
 
 To update an existing checkout:
 
@@ -100,9 +100,10 @@ Host directories are bind-mounted into the container:
 | --- | --- |
 | `themes/` | `/var/www/html/wp-content/themes` |
 | `plugins/` | `/var/www/html/wp-content/plugins` |
+| `mu-plugins/` | `/var/www/html/wp-content/mu-plugins` |
 | `logs/` | `/var/www/html/wp-content/debug-logs` |
 
-WordPress core is stored in the `wordpress_core` Docker volume, not in the repo. Put your own themes and plugins into `themes/` and `plugins/` yourself.
+WordPress core is stored in the `wordpress_core` Docker volume, not in the repo. Put your own themes, plugins, and must-use plugins into `themes/`, `plugins/`, and `mu-plugins/` yourself.
 
 ## Commands
 
@@ -112,6 +113,7 @@ make PROJECT=<slug>  # configure .env.example and copy to .env
 make start           # build and start (first run, and after Dockerfile/entrypoint changes)
 make up              # start without rebuilding the image
 make upb             # same as start
+make stop            # stop containers without removing them
 make down            # stop and remove containers
 make kill            # down plus remove volumes (database and WordPress core)
 make restart         # down + up
@@ -123,6 +125,20 @@ make wp-config-debug # WP_DEBUG / WP_DEBUG_LOG / WP_DEBUG_DISPLAY values
 ```
 
 After editing `php/entrypoint.sh` or `php/Dockerfile`, run `make start` or `make restart-build`.
+
+## Docker autostart and restart
+
+Docker Desktop should **not** autostart when you sign in to Windows. In Docker Desktop → Settings → General, disable **Start Docker Desktop when you sign in to your computer**. Start Docker manually when you need the stack.
+
+All services in `docker-compose.yml` use `restart: unless-stopped`:
+
+| Scenario | Behavior |
+| --- | --- |
+| Container crashes while Docker is running | Docker restarts it automatically |
+| Container stopped manually (`make stop`, `make down`, or `docker stop`) | Does not start when Docker starts again |
+| Stack left running, PC rebooted, Docker started manually | Containers come back (they were not manually stopped) |
+
+Before shutting down the PC, run `make stop` or `make down` if you do not want containers to resume on the next manual Docker start. Use `make stop` to pause the stack without removing containers; use `make down` to stop and remove containers (volumes are kept).
 
 ## Configuration
 
@@ -162,7 +178,8 @@ wpdocker/
 │   └── index.php             # Silence is golden (keeps empty dir in Git)
 ├── plugins/                  # Bind-mounted to wp-content/plugins
 │   └── index.php
-├── mu-plugins/               # Placeholder (.gitkeep); mount is commented out
+├── mu-plugins/               # Bind-mounted to wp-content/mu-plugins
+│   └── index.php
 ├── logs/                     # Bind-mounted to wp-content/debug-logs
 │   └── .gitkeep
 ├── docker-compose.yml        # wordpress, nginx, db, phpmyadmin + Traefik
@@ -176,6 +193,16 @@ wpdocker/
 WordPress core and the MySQL data directory live in named Docker volumes (`wordpress_core`, `db_data`), not in this tree.
 
 ## Changelog
+
+### 1.0.3
+
+- **NEW**: `make stop` — stop all services without removing containers
+- **DOCS**: Docker autostart and container restart policy (`unless-stopped`)
+
+### 1.0.2
+
+- **TECHNICAL**: `mu-plugins/` placeholder switched from `.gitkeep` to `index.php` (aligned with `themes/` and `plugins/`)
+- **NEW**: Bind-mount for `mu-plugins/` in `docker-compose.yml` (must-use plugins from the host)
 
 ### 1.0.1
 

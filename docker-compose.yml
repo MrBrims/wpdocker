@@ -3,6 +3,7 @@ services:
   db:
     image: mysql:${MYSQL_VERSION:-8}
     container_name: ${PROJECT_NAME}_db
+    # unless-stopped: auto-restart on crash; no restart after manual stop or make down/stop
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_NAME}
@@ -47,7 +48,7 @@ services:
       # Themes and plugins for development
       - ./themes:/var/www/html/wp-content/themes
       - ./plugins:/var/www/html/wp-content/plugins
-      # - ./mu-plugins:/var/www/html/wp-content/mu-plugins
+      - ./mu-plugins:/var/www/html/wp-content/mu-plugins
       # WordPress debug.log (visible on host in ./logs)
       - ./logs:/var/www/html/wp-content/debug-logs
       # php.ini with Xdebug settings

@@ -11,6 +11,10 @@ COMPOSE_FILE = -f docker-compose.yml
 up:
 	docker-compose $(COMPOSE_FILE) up -d
 
+# Stop containers without removing them (unless-stopped remembers manual stop)
+stop:
+	docker-compose $(COMPOSE_FILE) stop
+
 # Stop and remove containers, networks, and compose volumes
 down:
 	docker-compose $(COMPOSE_FILE) down
@@ -86,6 +90,7 @@ help:
 	@echo "Targets:"
 	@echo "  up             - Start all services in detached mode."
 	@echo "  upb            - Build and start all services in detached mode."
+	@echo "  stop           - Stop all services without removing containers."
 	@echo "  down           - Stop and remove all services."
 	@echo "  kill           - Stop and remove all services and volumes."
 	@echo "  restart        - Restart all services."
