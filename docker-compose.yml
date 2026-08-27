@@ -3,6 +3,7 @@ services:
   db:
     image: mysql:${MYSQL_VERSION:-8}
     container_name: ${PROJECT_NAME}_db
+    # unless-stopped: auto-restart on crash; no restart after manual stop or make down/stop
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_NAME}
