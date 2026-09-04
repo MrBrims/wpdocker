@@ -79,6 +79,20 @@ project-env:
 	@echo "In wptraefik run: make add-site SLUG=$(PROJECT) DOMAIN=$(PROJECT).localhost"
 
 # ==============================================================================
+# Themes and plugins cleanup
+# ==============================================================================
+
+.PHONY: delete-theme delete-plugins delete-all
+delete-theme:
+	@bash scripts/delete-wp-content.sh themes --confirm
+
+delete-plugins:
+	@bash scripts/delete-wp-content.sh plugins --confirm
+
+delete-all:
+	@bash scripts/delete-wp-content.sh all
+
+# ==============================================================================
 # Help
 # ==============================================================================
 
@@ -100,6 +114,9 @@ help:
 	@echo "  wp-ls          - List /var/www/html in container (check wp-config.php)."
 	@echo "  logs           - Show WordPress container logs (entrypoint, [WP_DEBUG] messages)."
 	@echo "  start          - Build and start all services (standard WordPress install on first run)."
+	@echo "  delete-theme   - Remove themes (confirm each; keep index.php)."
+	@echo "  delete-plugins - Remove plugins (confirm each; keep index.php)."
+	@echo "  delete-all     - Remove all themes and plugins (keep index.php)."
 	@echo ""
 	@echo "  make PROJECT=<slug> - Configure .env.example and copy to .env."
 	@echo ""
