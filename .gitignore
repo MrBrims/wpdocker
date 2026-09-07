@@ -9,9 +9,13 @@ vendor/
 dist/
 target/
 
-# WordPress debug log (bind-mounted from ./logs)
-logs/*
-!logs/.gitkeep
+# WordPress debug log (bind-mounted from ./app/logs)
+app/logs/*
+!app/logs/.gitkeep
+
+# WordPress uploads (bind-mounted from ./app/uploads)
+app/uploads/*
+!app/uploads/.gitkeep
 *.log
 debug.log
 npm-debug.log*

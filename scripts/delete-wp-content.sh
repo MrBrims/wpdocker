@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: delete-wp-content.sh <themes|plugins|all> [--confirm]
+# Usage: delete-wp-content.sh <themes|plugins|uploads|all> [--confirm]
 set -euo pipefail
 
 mode="${1:-}"
@@ -12,12 +12,21 @@ fi
 clean_dir() {
 	local dir="$1"
 	local label="$2"
+	local keep="${3:-index.php}"
 	local removed=0
 	local skipped=0
 
 	for item in "$dir"/*; do
 		[[ -e "$item" ]] || continue
-		[[ "$(basename "$item")" == "index.php" ]] && continue
+
+		local skip=false
+		for keep_name in $keep; do
+			if [[ "$(basename "$item")" == "$keep_name" ]]; then
+				skip=true
+				break
+			fi
+		done
+		$skip && continue
 
 		if $confirm_each; then
 			local ans=""
@@ -45,17 +54,20 @@ clean_dir() {
 
 case "$mode" in
 	themes)
-		clean_dir themes theme
+		clean_dir app/themes theme
 		;;
 	plugins)
-		clean_dir plugins plugin
+		clean_dir app/plugins plugin
+		;;
+	uploads)
+		clean_dir app/uploads upload "index.php .gitkeep"
 		;;
 	all)
-		clean_dir themes theme
-		clean_dir plugins plugin
+		clean_dir app/themes theme
+		clean_dir app/plugins plugin
 		;;
 	*)
-		echo "Usage: delete-wp-content.sh <themes|plugins|all> [--confirm]" >&2
+		echo "Usage: delete-wp-content.sh <themes|plugins|uploads|all> [--confirm]" >&2
 		exit 1
 		;;
 esac

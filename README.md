@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
 [![MySQL](https://img.shields.io/badge/MySQL-8-4479A1.svg)](https://www.mysql.com/)
 [![Traefik](https://img.shields.io/badge/Traefik-HTTPS-24A1C1.svg)](https://github.com/MrBrims/wptraefik)
-[![Version](https://img.shields.io/badge/Version-1.0.4-green.svg)](#changelog)
+[![Version](https://img.shields.io/badge/Version-1.0.7-green.svg)](#changelog)
 
 Local WordPress stack: PHP-FPM, Nginx, MySQL, phpMyAdmin. HTTPS is terminated by an external Traefik instance. The first start installs a stock WordPress (core, default Twenty* themes, default plugins). Themes are not cloned from remote repositories.
 
@@ -39,7 +39,7 @@ make PROJECT=wp
 
 For a different slug, pass your name instead of `wp` (e.g. `make PROJECT=myshop` sets `myshop.localhost` and `pma.myshop.localhost`).
 
-Empty `themes/`, `plugins/`, and `mu-plugins/` are kept in the repo via `index.php` (`// Silence is golden.`). Empty `logs/` uses `.gitkeep`. Put your own themes, plugins, and must-use plugins into those folders; they are not fetched from Git remotes by this stack.
+Empty `app/themes/`, `app/plugins/`, and `app/mu-plugins/` are kept in the repo via `index.php` (`// Silence is golden.`). Empty `app/logs/` and `app/uploads/` use `.gitkeep`. Put your own themes, plugins, and must-use plugins into those folders; they are not fetched from Git remotes by this stack. Media uploads appear in `app/uploads/` on the host.
 
 To update an existing checkout:
 
@@ -98,12 +98,13 @@ Host directories are bind-mounted into the container:
 
 | Host | Container |
 | --- | --- |
-| `themes/` | `/var/www/html/wp-content/themes` |
-| `plugins/` | `/var/www/html/wp-content/plugins` |
-| `mu-plugins/` | `/var/www/html/wp-content/mu-plugins` |
-| `logs/` | `/var/www/html/wp-content/debug-logs` |
+| `app/themes/` | `/var/www/html/wp-content/themes` |
+| `app/plugins/` | `/var/www/html/wp-content/plugins` |
+| `app/mu-plugins/` | `/var/www/html/wp-content/mu-plugins` |
+| `app/logs/` | `/var/www/html/wp-content/debug-logs` |
+| `app/uploads/` | `/var/www/html/wp-content/uploads` |
 
-WordPress core is stored in the `wordpress_core` Docker volume, not in the repo. Put your own themes, plugins, and must-use plugins into `themes/`, `plugins/`, and `mu-plugins/` yourself.
+WordPress core is stored in the `wordpress_core` Docker volume, not in the repo. Put your own themes, plugins, and must-use plugins into `app/themes/`, `app/plugins/`, and `app/mu-plugins/` yourself. Uploaded media is stored in `app/uploads/`.
 
 ## Commands
 
@@ -124,6 +125,7 @@ make wp-ls           # list /var/www/html
 make wp-config-debug # WP_DEBUG / WP_DEBUG_LOG / WP_DEBUG_DISPLAY values
 make delete-theme    # remove themes (confirm each; keep index.php)
 make delete-plugins  # remove plugins (confirm each; keep index.php)
+make delete-uploads  # remove uploads (confirm each; keep .gitkeep and index.php)
 make delete-all      # remove all themes and plugins (keep index.php)
 ```
 
@@ -154,7 +156,7 @@ Configure hostnames with `make PROJECT=<slug>` or copy `.env.example` to `.env` 
 | `UID` / `GID` | owner of files created by WP-CLI |
 | `DB_*`, `MYSQL_VERSION` | MySQL |
 | `WP_ADMIN_*` | WordPress admin (first install only) |
-| `WP_DEBUG`, `WP_DEBUG_LOG`, `WP_DEBUG_DISPLAY` | debug; log file is `logs/debug.log` |
+| `WP_DEBUG`, `WP_DEBUG_LOG`, `WP_DEBUG_DISPLAY` | debug; log file is `app/logs/debug.log` |
 
 `.env` is not committed to git.
 
@@ -171,20 +173,25 @@ Clean reinstall: `make kill`, then `make start`.
 
 ```
 wpdocker/
+├── app/
+│   ├── themes/               # Bind-mounted to wp-content/themes
+│   │   └── index.php         # Silence is golden (keeps empty dir in Git)
+│   ├── plugins/              # Bind-mounted to wp-content/plugins
+│   │   └── index.php
+│   ├── mu-plugins/           # Bind-mounted to wp-content/mu-plugins
+│   │   └── index.php
+│   ├── logs/                 # Bind-mounted to wp-content/debug-logs
+│   │   └── .gitkeep
+│   └── uploads/              # Bind-mounted to wp-content/uploads
+│       └── .gitkeep
 ├── php/
 │   ├── Dockerfile            # PHP 8.2-FPM, WP-CLI, Xdebug, gosu
 │   ├── entrypoint.sh         # First-run WP install, languages, WP_DEBUG
 │   └── php.ini               # PHP limits and Xdebug (host.docker.internal)
 ├── nginx/
 │   └── default.conf.template # WordPress vhost; HTTPS forwarded from Traefik
-├── themes/                   # Bind-mounted to wp-content/themes
-│   └── index.php             # Silence is golden (keeps empty dir in Git)
-├── plugins/                  # Bind-mounted to wp-content/plugins
-│   └── index.php
-├── mu-plugins/               # Bind-mounted to wp-content/mu-plugins
-│   └── index.php
-├── logs/                     # Bind-mounted to wp-content/debug-logs
-│   └── .gitkeep
+├── scripts/
+│   └── delete-wp-content.sh  # Clean app/themes, app/plugins, and app/uploads
 ├── docker-compose.yml        # wordpress, nginx, db, phpmyadmin + Traefik
 ├── Makefile                  # docker compose wrappers (make help)
 ├── .env.example
@@ -196,6 +203,15 @@ wpdocker/
 WordPress core and the MySQL data directory live in named Docker volumes (`wordpress_core`, `db_data`), not in this tree.
 
 ## Changelog
+
+### 1.0.7
+
+- **NEW**: Bind-mount `app/uploads/` for WordPress media files on the host
+- **NEW**: `make delete-uploads` — clean `app/uploads/` (confirm each; keep `.gitkeep` and `index.php`)
+
+### 1.0.6
+
+- **TECHNICAL**: Move themes, plugins, mu-plugins, and logs under `app/`
 
 ### 1.0.5
 

@@ -24,7 +24,7 @@ if [ -d "/var/www/html/wp-content" ]; then
     mkdir -p /var/www/html/wp-content/ai1wm-backups
     chmod -R 777 /var/www/html/wp-content/ai1wm-backups
 fi
-for dir in plugins themes mu-plugins; do
+for dir in plugins themes mu-plugins uploads; do
     if [ -d "/var/www/html/wp-content/${dir}" ]; then
         chmod 777 "/var/www/html/wp-content/${dir}"
     fi

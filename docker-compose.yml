@@ -46,11 +46,13 @@ services:
       # WordPress core (downloaded on first run)
       - wordpress_core:/var/www/html
       # Themes and plugins for development
-      - ./themes:/var/www/html/wp-content/themes
-      - ./plugins:/var/www/html/wp-content/plugins
-      - ./mu-plugins:/var/www/html/wp-content/mu-plugins
-      # WordPress debug.log (visible on host in ./logs)
-      - ./logs:/var/www/html/wp-content/debug-logs
+      - ./app/themes:/var/www/html/wp-content/themes
+      - ./app/plugins:/var/www/html/wp-content/plugins
+      - ./app/mu-plugins:/var/www/html/wp-content/mu-plugins
+      # WordPress debug.log (visible on host in ./app/logs)
+      - ./app/logs:/var/www/html/wp-content/debug-logs
+      # WordPress media uploads (visible on host in ./app/uploads)
+      - ./app/uploads:/var/www/html/wp-content/uploads
       # php.ini with Xdebug settings
       - ./php/php.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     networks:
@@ -63,8 +65,9 @@ services:
     restart: unless-stopped
     volumes:
       - wordpress_core:/var/www/html
-      - ./themes:/var/www/html/wp-content/themes:ro # :ro — read-only for Nginx
-      - ./plugins:/var/www/html/wp-content/plugins:ro
+      - ./app/themes:/var/www/html/wp-content/themes:ro # :ro — read-only for Nginx
+      - ./app/plugins:/var/www/html/wp-content/plugins:ro
+      - ./app/uploads:/var/www/html/wp-content/uploads:ro
       - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template
     environment:
       - SITE_HOSTNAME=${SITE_HOSTNAME}
