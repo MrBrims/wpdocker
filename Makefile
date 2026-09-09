@@ -82,12 +82,15 @@ project-env:
 # Themes and plugins cleanup
 # ==============================================================================
 
-.PHONY: delete-theme delete-plugins delete-all
+.PHONY: delete-theme delete-plugins delete-uploads delete-all
 delete-theme:
 	@bash scripts/delete-wp-content.sh themes --confirm
 
 delete-plugins:
 	@bash scripts/delete-wp-content.sh plugins --confirm
+
+delete-uploads:
+	@bash scripts/delete-wp-content.sh uploads --confirm
 
 delete-all:
 	@bash scripts/delete-wp-content.sh all
@@ -116,6 +119,7 @@ help:
 	@echo "  start          - Build and start all services (standard WordPress install on first run)."
 	@echo "  delete-theme   - Remove themes (confirm each; keep index.php)."
 	@echo "  delete-plugins - Remove plugins (confirm each; keep index.php)."
+	@echo "  delete-uploads - Remove uploads (confirm each; keep .gitkeep and index.php)."
 	@echo "  delete-all     - Remove all themes and plugins (keep index.php)."
 	@echo ""
 	@echo "  make PROJECT=<slug> - Configure .env.example and copy to .env."
