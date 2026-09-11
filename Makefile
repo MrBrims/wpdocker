@@ -96,6 +96,14 @@ delete-all:
 	@bash scripts/delete-wp-content.sh all
 
 # ==============================================================================
+# WordPress translations
+# ==============================================================================
+
+.PHONY: wp-update-translations
+wp-update-translations:
+	docker-compose $(COMPOSE_FILE) exec -T wordpress /usr/local/bin/wp-update-translations.sh
+
+# ==============================================================================
 # Help
 # ==============================================================================
 
@@ -121,6 +129,7 @@ help:
 	@echo "  delete-plugins - Remove plugins (confirm each; keep index.php)."
 	@echo "  delete-uploads - Remove uploads (confirm each; keep .gitkeep and index.php)."
 	@echo "  delete-all     - Remove all themes and plugins (keep index.php)."
+	@echo "  wp-update-translations - Install/update locale packs from WP_LANGUAGE."
 	@echo ""
 	@echo "  make PROJECT=<slug> - Configure .env.example and copy to .env."
 	@echo ""

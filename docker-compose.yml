@@ -35,6 +35,7 @@ services:
       WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD}
       WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
       SITE_HOSTNAME: ${SITE_HOSTNAME}
+      WP_LANGUAGE: ${WP_LANGUAGE:-}
       # User and group IDs for file permissions
       UID: ${UID}
       GID: ${GID}
