@@ -89,25 +89,13 @@ exit(($mysqli && !$mysqli->connect_errno) ? 0 : 1);
                     --admin_email="${WP_ADMIN_EMAIL}" \
                     --skip-email
 
-    echo "Installing additional language packs..."
-    # Install popular language packs so they appear in the admin dropdown
-    gosu "${UID}":"${GID}" wp language core install ru_RU --path=/var/www/html
-    gosu "${UID}":"${GID}" wp language core install de_DE --path=/var/www/html
-    gosu "${UID}":"${GID}" wp language core install fr_FR --path=/var/www/html
-    gosu "${UID}":"${GID}" wp language core install es_ES --path=/var/www/html
-    gosu "${UID}":"${GID}" wp language core install it_IT --path=/var/www/html
+    echo "Installing language packs from WP_LANGUAGE..."
+    /usr/local/bin/wp-update-translations.sh --activate-first
 
     echo "WordPress installation complete."
 
 else
     echo "WordPress is already configured."
-    echo "Installing additional language packs..."
-    # Install popular language packs so they appear in the admin dropdown
-    gosu "${UID}":"${GID}" wp language core install ru_RU --path=/var/www/html
-    gosu "${UID}":"${GID}" wp language core install de_DE --path=/var/www/html
-    gosu "${UID}":"${GID}" wp language core install fr_FR --path=/var/www/html
-    gosu "${UID}":"${GID}" wp language core install es_ES --path=/var/www/html
-    gosu "${UID}":"${GID}" wp language core install it_IT --path=/var/www/html
 fi
 
 # Apply WordPress debug settings from environment (every container start)

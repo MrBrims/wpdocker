@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
 [![MySQL](https://img.shields.io/badge/MySQL-8-4479A1.svg)](https://www.mysql.com/)
 [![Traefik](https://img.shields.io/badge/Traefik-HTTPS-24A1C1.svg)](https://github.com/MrBrims/wptraefik)
-[![Version](https://img.shields.io/badge/Version-1.0.7-green.svg)](#changelog)
+[![Version](https://img.shields.io/badge/Version-1.0.8-green.svg)](#changelog)
 
 Local WordPress stack: PHP-FPM, Nginx, MySQL, phpMyAdmin. HTTPS is terminated by an external Traefik instance. The first start installs a stock WordPress (core, default Twenty* themes, default plugins). Themes are not cloned from remote repositories.
 
@@ -67,7 +67,7 @@ make PROJECT=wp
 make start
 ```
 
-`make start` builds the PHP image and starts the containers. If `wp-config.php` is missing, the entrypoint downloads WordPress core, creates the config, waits for the database, and runs `wp core install`.
+`make start` builds the PHP image and starts the containers. If `wp-config.php` is missing, the entrypoint downloads WordPress core, creates the config, waits for the database, runs `wp core install`, and installs locale packs from `WP_LANGUAGE`. Later, run `make wp-update-translations` to add or refresh those packs.
 
 Site: [https://wp.localhost](https://wp.localhost)  
 phpMyAdmin: [https://pma.wp.localhost](https://pma.wp.localhost)
@@ -127,9 +127,10 @@ make delete-theme    # remove themes (confirm each; keep index.php)
 make delete-plugins  # remove plugins (confirm each; keep index.php)
 make delete-uploads  # remove uploads (confirm each; keep .gitkeep and index.php)
 make delete-all      # remove all themes and plugins (keep index.php)
+make wp-update-translations # install/update locale packs from WP_LANGUAGE
 ```
 
-After editing `php/entrypoint.sh` or `php/Dockerfile`, run `make start` or `make restart-build`.
+After editing `php/entrypoint.sh`, `php/wp-update-translations.sh`, or `php/Dockerfile`, run `make start` or `make restart-build`.
 
 ## Docker autostart and restart
 
@@ -156,6 +157,7 @@ Configure hostnames with `make PROJECT=<slug>` or copy `.env.example` to `.env` 
 | `UID` / `GID` | owner of files created by WP-CLI |
 | `DB_*`, `MYSQL_VERSION` | MySQL |
 | `WP_ADMIN_*` | WordPress admin (first install only) |
+| `WP_LANGUAGE` | locale packs, comma-separated (`ru_RU` or `ru_RU,de_DE`); first locale is activated on first install; empty = English only |
 | `WP_DEBUG`, `WP_DEBUG_LOG`, `WP_DEBUG_DISPLAY` | debug; log file is `app/logs/debug.log` |
 
 `.env` is not committed to git.
@@ -186,7 +188,8 @@ wpdocker/
 │       └── .gitkeep
 ├── php/
 │   ├── Dockerfile            # PHP 8.2-FPM, WP-CLI, Xdebug, gosu
-│   ├── entrypoint.sh         # First-run WP install, languages, WP_DEBUG
+│   ├── entrypoint.sh         # First-run WP install, WP_LANGUAGE packs, WP_DEBUG
+│   ├── wp-update-translations.sh  # Install/update locale packs from WP_LANGUAGE
 │   └── php.ini               # PHP limits and Xdebug (host.docker.internal)
 ├── nginx/
 │   └── default.conf.template # WordPress vhost; HTTPS forwarded from Traefik
@@ -203,6 +206,11 @@ wpdocker/
 WordPress core and the MySQL data directory live in named Docker volumes (`wordpress_core`, `db_data`), not in this tree.
 
 ## Changelog
+
+### 1.0.8
+
+- **NEW**: `WP_LANGUAGE` in `.env` (comma-separated locales) and `make wp-update-translations`
+- **TECHNICAL**: Language packs install on first WordPress install only, not on every container start
 
 ### 1.0.7
 

@@ -32,10 +32,10 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
-# Entrypoint script
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
-    && chmod +x /usr/local/bin/entrypoint.sh
+# Entrypoint and translation scripts
+COPY entrypoint.sh wp-update-translations.sh /usr/local/bin/
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh /usr/local/bin/wp-update-translations.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/wp-update-translations.sh
 
 WORKDIR /var/www/html
 
